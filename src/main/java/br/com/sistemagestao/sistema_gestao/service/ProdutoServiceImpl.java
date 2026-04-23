@@ -43,21 +43,47 @@ public class ProdutoServiceImpl implements ProdutoService{
 
     @Override
     public List<ProdutoResponseDTO> listarTodosProdutos() {
-        return List.of();
+        return produtoRepository.findAll().stream().map(ProdutoMapper::toResponseDTO).toList();
     }
 
     @Override
     public ProdutoResponseDTO buscarProdutoPorId(Long id) {
-        return null;
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Produto não encontrado"));
+
+        return ProdutoMapper.toResponseDTO(produto);
     }
 
     @Override
     public ProdutoResponseDTO atualizarProdutoPorId(Long id, ProdutoRequestDTO dto) {
-        return null;
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Produto não encontrado"));
+
+        produto.setNome(dto.nome());
+        produto.setDescricao(dto.descricao());
+        produto.setPreco(dto.preco());
+        produto.setQuantidadeEstoque(dto.quantidadeEstoque());
+        produto.setCategoria(dto.categoria());
+        produto.setFornecedor(buscarFornecedorPorid(dto.fornecedorId()));
+
+        return ProdutoMapper.toResponseDTO(produto);
     }
 
     @Override
     public void deletarProdutoPorId(Long id) {
+        if(!produtoRepository.existsById(id)) {
+            throw new
+                    ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Produto não encontrado");
+        }
+        produtoRepository.deleteById(id);
+    }
 
+    private Fornecedor buscarFornecedorPorid(Long id) {
+        return fornecedorRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Produto não encontrado"));
     }
 }
